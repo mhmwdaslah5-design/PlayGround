@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#060a16" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23060a16'/%3E%3Cpath d='M18 46 32 18l14 28' fill='none' stroke='%235ee8ff' stroke-width='5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" />
+  <meta name="description" content="Gradual Ascent — لعبة باركور وألغاز من ١٥ مرحلة تصعد بك من الأساسيات إلى قمة التحدي." />
+  <title>Gradual Ascent — الصعود التدريجي</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div id="app">
+    <canvas id="game" aria-label="لعبة Gradual Ascent — باركور وألغاز"></canvas>
+    <div class="vignette" aria-hidden="true"></div>
+    <div class="grain" aria-hidden="true"></div>
+
+    <header class="hud" id="hud" aria-live="polite">
+      <div class="hud-left">
+        <div class="stage-badge">
+          <span class="stage-kicker" id="hud-stage">المرحلة ١ من ١٥</span>
+          <strong id="hud-name">الخطوات الأولى</strong>
+        </div>
+        <div class="difficulty">
+          <div class="difficulty-row">
+            <span>الصعوبة</span>
+            <b id="hud-difficulty">١ / ١٠</b>
+          </div>
+          <div class="difficulty-track"><i id="hud-difficulty-fill"></i></div>
+        </div>
+      </div>
+      <div class="hud-right">
+        <div class="hud-stats">
+          <div class="hud-stat hidden" id="hud-keys">
+            <span class="stat-icon key-icon" aria-hidden="true"></span>
+            <span id="hud-key-count" dir="ltr">٠ / ٠</span>
+          </div>
+          <div class="hud-stat">
+            <span class="stat-label">الوقت</span>
+            <span id="hud-time" dir="ltr">٠:٠٠</span>
+          </div>
+          <div class="hud-stat">
+            <span class="stat-label">السقطات</span>
+            <span id="hud-deaths" dir="ltr">٠</span>
+          </div>
+        </div>
+        <div class="hud-actions">
+          <button class="icon-btn" id="mute-btn" type="button" aria-label="كتم الصوت" title="كتم الصوت">♪</button>
+          <button class="icon-btn" id="pause-btn" type="button" aria-label="إيقاف مؤقت" title="إيقاف مؤقت">❚❚</button>
+        </div>
+      </div>
+    </header>
+
+    <div class="sequence-pill hidden" id="hud-sequence">
+      <span>تسلسل الأزرار</span>
+      <strong id="hud-sequence-value">● ◆ ▲</strong>
+    </div>
+
+    <div class="freeze-pill hidden" id="hud-freeze">
+      <span class="freeze-icon" aria-hidden="true">⏱</span>
+      <span>تثبيت المنصات</span>
+      <strong id="hud-freeze-time" dir="ltr">٩</strong>
+    </div>
+
+    <div class="objective-pill" id="objective-pill">
+      <span class="objective-dot" aria-hidden="true"></span>
+      <span id="hud-objective">اقفز بين المنصات المتجاورة وادخل بوابة النهاية.</span>
+    </div>
+
+    <div class="touch-controls" aria-hidden="true">
+      <div class="touch-move">
+        <button class="touch-btn" id="btn-left" type="button" aria-label="يسار">←</button>
+        <button class="touch-btn" id="btn-right" type="button" aria-label="يمين">→</button>
+      </div>
+      <button class="touch-btn jump-btn" id="btn-jump" type="button" aria-label="قفز">قفز</button>
+    </div>
+
+    <section class="screen" id="screen-start">
+      <div class="start-glow" aria-hidden="true"></div>
+      <div class="start-card">
+        <div class="eyebrow"><span class="eyebrow-line"></span> ماب باركور وألغاز · ١٥ مرحلة <span class="eyebrow-line"></span></div>
+        <h1 class="game-title">Gradual<br /><span>Ascent</span></h1>
+        <p class="game-subtitle">الصعود التدريجي</p>
+        <p class="game-desc">من القفزة الأولى إلى بوابة القمة. كل مرحلة تعلّمك مهارة، وكل مهارة تفتح الطريق لما بعدها.</p>
+        <div class="start-stats">
+          <div><strong>١٥</strong><span>مرحلة</span></div>
+          <div><strong>٣</strong><span>أنواع ألغاز</span></div>
+          <div><strong>٩.٥</strong><span>قمة الصعوبة</span></div>
+        </div>
+        <div class="start-actions">
+          <button class="primary-btn" id="start-btn" type="button">
+            <span>ابدأ الصعود</span>
+            <i aria-hidden="true">↑</i>
+          </button>
+          <div class="secondary-actions">
+            <button class="ghost-btn" id="levels-btn" type="button">اختيار المرحلة</button>
+            <button class="ghost-btn" id="guide-btn" type="button">دليل التصميم</button>
+          </div>
+        </div>
+        <p class="start-progress" id="start-progress">أفضل تقدم: المرحلة ١</p>
+        <div class="controls-hint">
+          <span><kbd>←</kbd><kbd>→</kbd> حركة</span>
+          <span><kbd>Space</kbd> قفز</span>
+          <span><kbd>R</kbd> إعادة</span>
+          <span><kbd>P</kbd> إيقاف</span>
+        </div>
+      </div>
+      <div class="start-footer">Gradual Ascent · 15-stage parkour &amp; puzzle map</div>
+    </section>
+
+    <section class="screen hidden" id="screen-levels">
+      <div class="panel wide-panel">
+        <header class="panel-head">
+          <div>
+            <span class="panel-kicker">خريطة الصعود</span>
+            <h2>اختر مرحلة</h2>
+          </div>
+          <button class="icon-btn" id="levels-close" type="button" aria-label="إغلاق">✕</button>
+        </header>
+        <p class="panel-note">المراحل مرتبة من الأسهل إلى الأصعب. يمكنك تجربة أي مرحلة، لكن التدرج مصمم للعب من ١ إلى ١٥.</p>
+        <div class="level-grid" id="level-grid"></div>
+        <footer class="panel-foot">
+          <button class="ghost-btn" id="levels-back" type="button">رجوع</button>
+        </footer>
+      </div>
+    </section>
+
+    <section class="screen hidden" id="screen-guide">
+      <div class="panel guide-panel">
+        <header class="panel-head">
+          <div>
+            <span class="panel-kicker">Build Guide</span>
+            <h2>دليل تصميم الخريطة</h2>
+          </div>
+          <button class="icon-btn" id="guide-close" type="button" aria-label="إغلاق">✕</button>
+        </header>
+        <p class="panel-note">كل مرحلة بمواقعها التقريبية، مسافات القفز، الأزرار والمفاتيح والأبواب، وخطوات اللاعب بالترتيب.</p>
+        <div class="guide-list" id="guide-list"></div>
+        <footer class="panel-foot">
+          <button class="ghost-btn" id="guide-back" type="button">رجوع</button>
+        </footer>
+      </div>
+    </section>
+
+    <section class="screen hidden" id="screen-pause">
+      <div class="panel">
+        <header class="panel-head">
+          <div>
+            <span class="panel-kicker">إيقاف مؤقت</span>
+            <h2 id="pause-title">المرحلة ١ — الخطوات الأولى</h2>
+          </div>
+        </header>
+        <p class="panel-objective" id="pause-objective"></p>
+        <div class="pause-route"><strong>المسار:</strong> <span id="pause-route"></span></div>
+        <div class="pause-steps-wrap">
+          <h3>خطوات إتمام المرحلة</h3>
+          <ol id="pause-steps"></ol>
+        </div>
+        <div class="panel-actions">
+          <button class="primary-btn" id="resume-btn" type="button"><span>متابعة</span></button>
+          <button class="ghost-btn" id="pause-restart" type="button">إعادة المرحلة</button>
+          <button class="ghost-btn" id="pause-menu" type="button">القائمة</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="screen hidden" id="screen-complete">
+      <div class="panel result-panel">
+        <span class="result-kicker">اكتملت المرحلة</span>
+        <h2 class="result-title" id="complete-stage">المرحلة ١ — الخطوات الأولى</h2>
+        <div class="result-grid">
+          <div><span>الوقت</span><strong id="complete-time" dir="ltr">٠:٠٠</strong></div>
+          <div><span>السقطات</span><strong id="complete-deaths" dir="ltr">٠</strong></div>
+          <div><span>المفاتيح</span><strong id="complete-keys" dir="ltr">—</strong></div>
+        </div>
+        <p class="next-label" id="complete-next-label"></p>
+        <div class="panel-actions">
+          <button class="primary-btn" id="complete-next" type="button"><span>المرحلة التالية</span><i aria-hidden="true">↑</i></button>
+          <button class="ghost-btn" id="complete-retry" type="button">إعادة</button>
+          <button class="ghost-btn" id="complete-menu" type="button">القائمة</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="screen hidden" id="screen-final">
+      <div class="panel final-panel">
+        <span class="result-kicker">بوابة القمة</span>
+        <h2 class="final-title">وصلت القمة</h2>
+        <p class="final-desc">أكملت Gradual Ascent. خمس عشرة مرحلة، من أول قفزة إلى آخر زر.</p>
+        <div class="result-grid final-grid">
+          <div><span>الوقت الكلي</span><strong id="final-time" dir="ltr">٠:٠٠</strong></div>
+          <div><span>السقطات</span><strong id="final-deaths" dir="ltr">٠</strong></div>
+        </div>
+        <div class="final-stats" id="final-stats"></div>
+        <div class="panel-actions">
+          <button class="primary-btn" id="final-restart" type="button"><span>أعد الصعود</span></button>
+          <button class="ghost-btn" id="final-menu" type="button">القائمة</button>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script type="module" src="game.js"></script>
+</body>
+</html>
